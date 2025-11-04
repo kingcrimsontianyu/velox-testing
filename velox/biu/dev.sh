@@ -2,11 +2,15 @@
 
 set -euo pipefail
 
+WORKING_DIR=/mnt/biu
+
 source "../scripts/config.sh"
 
 docker compose -f "$COMPOSE_FILE" run --rm \
 -v ~/.sccache-auth/aws_credentials:/root/.aws/credentials:ro \
--w "/opt/velox-build/release" \
+-v $(pwd):/mnt/biu \
+-v /mnt/nvme_ubuntu_test:/mnt/nvme \
+-w ${WORKING_DIR} \
 "${CONTAINER_NAME}" bash -c '
 # Source conda if available
 if [ -f "/opt/miniforge/etc/profile.d/conda.sh" ]; then
