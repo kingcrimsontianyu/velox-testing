@@ -4,7 +4,10 @@ set -euo pipefail
 
 source "../scripts/config.sh"
 
-docker compose -f "$COMPOSE_FILE" run --rm "${CONTAINER_NAME}" bash -c '
+docker compose -f "$COMPOSE_FILE" run --rm \
+-v ~/.sccache-auth/aws_credentials:/root/.aws/credentials:ro \
+-w "/opt/velox-build/release" \
+"${CONTAINER_NAME}" bash -c '
 # Source conda if available
 if [ -f "/opt/miniforge/etc/profile.d/conda.sh" ]; then
     source "/opt/miniforge/etc/profile.d/conda.sh"
