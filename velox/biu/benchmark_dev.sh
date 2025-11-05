@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-VELOX_CUDF_TPCH_BENCHMARK=/opt/velox-build/release/velox/experimental/cudf/benchmarks/velox_cudf_tpch_benchmark
+BUILD_TYPE=debug
+VELOX_CUDF_TPCH_BENCHMARK=/opt/velox-build/${BUILD_TYPE}/velox/experimental/cudf/benchmarks/velox_cudf_tpch_benchmark
 SCALE_FACTOR=0.01
 
 # DATA_PATH=s3://biu-velox/velox-tpch-data/sf-${SCALE_FACTOR}

@@ -1,7 +1,12 @@
 {
     "name": "Velox Development Container",
-    "image": "velox-adapters-build:latest",
+    "image": "velox-adapters-build-debug:latest",
     "workspaceFolder": "/mnt/workspace",
+    "containerEnv": {
+        "HOST_USER": "${localEnv:USER}",
+        "HOST_UID": "${localEnv:UID}",
+        "HOST_GID": "${localEnv:GID}"
+    },
     "runArgs": [
         "--runtime=nvidia",
         "--gpus=all",
@@ -11,14 +16,23 @@
         "${localEnv:USER:anon}-velox-dev"
     ],
     "mounts": [
+        // AWS credentials
         "source=${localEnv:HOME}/.sccache-auth/aws_credentials,target=/root/.aws/credentials,type=bind,readonly",
+        // My own scripts
         "source=${localWorkspaceFolder}/velox/biu,target=/mnt/biu,type=bind",
+        // Root velox-testing repository
         "source=${localWorkspaceFolder},target=/mnt/workspace,type=bind",
+        // Host ${HOME}
         "source=${localEnv:HOME},target=/mnt/host_home,type=bind",
-        "source=/mnt/nvme_ubuntu_test,target=/mnt/nvme,type=bind"
+        // Fast NVMe where data are held
+        "source=/mnt/nvme_ubuntu_test,target=/mnt/nvme,type=bind",
+        // Root velox repository
+        "source=${localWorkspaceFolder}/../velox,target=/workspace/velox,type=bind"
     ],
     "containerUser": "root",
-    "remoteUser": "root",
     "overrideCommand": true,
-    "postAttachCommand": "/bin/bash /mnt/workspace/.devcontainer/biu/post_create_command.sh"
+    // Create user first (runs as root)
+    "postCreateCommand": "/bin/bash /mnt/workspace/.devcontainer/biu/post_create.sh",
+    // Setup environment (runs as user)
+    "postAttachCommand": "/bin/bash /mnt/workspace/.devcontainer/biu/post_attach.sh"
 }
