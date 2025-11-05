@@ -9,6 +9,7 @@ source "../scripts/config.sh"
 docker compose -f "$COMPOSE_FILE" run --rm \
 -v ~/.sccache-auth/aws_credentials:/root/.aws/credentials:ro \
 -v $(pwd):/mnt/biu \
+-v ${HOME}:/mnt/host_home \
 -v /mnt/nvme_ubuntu_test:/mnt/nvme \
 -w ${WORKING_DIR} \
 "${CONTAINER_NAME}" bash -c '
