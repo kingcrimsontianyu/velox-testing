@@ -47,8 +47,8 @@ fi
 
 # Install useful tools
 echo "Installing additional tools..."
-# yum update -y
-# yum install -y gdb
+yum update -y
+yum install -y gdb
 
 echo "User setup complete!"
 
