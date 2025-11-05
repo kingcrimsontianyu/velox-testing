@@ -1,0 +1,24 @@
+{
+    "name": "Velox Development Container",
+    "image": "velox-adapters-build:latest",
+    "workspaceFolder": "/mnt/workspace",
+    "runArgs": [
+        "--runtime=nvidia",
+        "--gpus=all",
+        "--cap-add=SYS_ADMIN",
+        "--rm",
+        "--name",
+        "${localEnv:USER:anon}-velox-dev"
+    ],
+    "mounts": [
+        "source=${localEnv:HOME}/.sccache-auth/aws_credentials,target=/root/.aws/credentials,type=bind,readonly",
+        "source=${localWorkspaceFolder}/velox/biu,target=/mnt/biu,type=bind",
+        "source=${localWorkspaceFolder},target=/mnt/workspace,type=bind",
+        "source=${localEnv:HOME},target=/mnt/host_home,type=bind",
+        "source=/mnt/nvme_ubuntu_test,target=/mnt/nvme,type=bind"
+    ],
+    "containerUser": "root",
+    "remoteUser": "root",
+    "overrideCommand": true,
+    "postAttachCommand": "/bin/bash /mnt/workspace/.devcontainer/biu/post_create_command.sh"
+}

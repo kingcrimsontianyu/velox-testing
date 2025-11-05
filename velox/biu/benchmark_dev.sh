@@ -4,17 +4,17 @@ VELOX_CUDF_TPCH_BENCHMARK=/opt/velox-build/release/velox/experimental/cudf/bench
 SCALE_FACTOR=0.01
 
 # DATA_PATH=s3://biu-velox/velox-tpch-data/sf-${SCALE_FACTOR}
-DATA_PATH=https://biu-velox.s3.us-east-1.amazonaws.com/velox-tpch-data/sf-${SCALE_FACTOR}
-# DATA_PATH=/mnt/nvme/velox-tpch-data/sf-${SCALE_FACTOR}
+# DATA_PATH=https://biu-velox.s3.us-east-1.amazonaws.com/velox-tpch-data/sf-${SCALE_FACTOR}
+DATA_PATH=/mnt/nvme/velox-tpch-data/sf-${SCALE_FACTOR}
 
 OUTPUT_PATH=/mnt/nvme/velox-tpch-result/tmp.txt
 
 # export AWS_CONFIG_FILE="/mnt/host_home/.aws/config"
 # export AWS_SHARED_CREDENTIALS_FILE="/mnt/host_home/.aws/credentials"
 
-export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
-export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
-export AWS_DEFAULT_REGION=$(aws configure get region)
+# export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
+# export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
+# export AWS_DEFAULT_REGION=$(aws configure get region)
 
 ${VELOX_CUDF_TPCH_BENCHMARK} \
 --data_path=${DATA_PATH} --data_format=parquet \
