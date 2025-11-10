@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
-export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
-export AWS_DEFAULT_REGION=$(aws configure get region)
+# export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
+# export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
+# export AWS_DEFAULT_REGION=$(aws configure get region)
 
-region=${AWS_DEFAULT_REGION}
-user_password=${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}
+# region=${AWS_DEFAULT_REGION}
+# user_password=${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}
 
 # url="https://biu-velox.s3.us-east-1.amazonaws.com/velox-tpch-data/sf-0.01/lineitem/lineitem-1.parquet"
 # curl -s $url --aws-sigv4 "aws:amz:${region}:s3" --user "${user_password}" \
@@ -15,6 +15,7 @@ user_password=${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}
 # curl -s $url \
 # -o /dev/null -w "%{http_code}\n" -v
 
-url="https://biu-velox.s3.us-east-1.amazonaws.com/velox-tpch-data/sf-0.01/lineitem/lineitem-1.parquet"
+# url="https://biu-velox.s3.us-east-1.amazonaws.com/velox-tpch-data/sf-0.01/lineitem/lineitem-1.parquet"
+url="https://kvikio-remote-io-dev.s3.us-east-2.amazonaws.com/velox/sf-0.01/lineitem/lineitem-1.parquet"
 curl -s $url \
 -o /dev/null -w "%{http_code}\n" -v
