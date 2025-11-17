@@ -6,7 +6,7 @@ SCALE_FACTOR=0.01
 
 # DATA_PATH=s3://biu-velox/velox-tpch-data/sf-${SCALE_FACTOR}
 # DATA_PATH=https://biu-velox.s3.us-east-1.amazonaws.com/velox-tpch-data/sf-${SCALE_FACTOR}
-DATA_PATH=/mnt/nvme/velox-tpch-data/sf-${SCALE_FACTOR}
+DATA_PATH=/mnt/nvme/velox-tpch-data/biu-partition/sf-${SCALE_FACTOR}
 
 OUTPUT_PATH=/mnt/nvme/velox-tpch-result/tmp.txt
 
