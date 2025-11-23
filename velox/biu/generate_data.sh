@@ -12,6 +12,10 @@ max_rows_per_file=200000
 data_script_dir=../../benchmark_data_tools
 data_dest_dir=/mnt/nvme_ubuntu_test/velox-tpch-data/biu-partition/sf-${scale_factor}
 
+# Spark-H: local
+# data_dest_dir=/ssd1/tialiu/velox-tpch-data/biu-partition/sf-${scale_factor}
+# Spark-H: HDFS
+# sudo -u hdfs $HADOOP_HOME/bin/hdfs dfs -ls /data/velox-tpch/biu-partition/
 
 pip install -r ${data_script_dir}/requirements.txt
 python ${data_script_dir}/generate_data_files.py \
