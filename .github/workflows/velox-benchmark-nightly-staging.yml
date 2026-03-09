@@ -5,6 +5,10 @@ on:
     - cron: '0 8 * * *'  # daily at 08:00 UTC
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   nightly-tpch-sanity-test:
     uses: ./.github/workflows/velox-benchmark-sanity-test.yml
@@ -12,4 +16,5 @@ jobs:
       repository: ${{ vars.STABLE_VELOX_REPO }}
       velox_commit: ${{ vars.STABLE_VELOX_COMMIT }}
       benchmark_type: tpch
+      use_upstream_deps_image: ${{ vars.STABLE_VELOX_USE_UPSTREAM_DEPS_IMAGE == 'true' }}
     secrets: inherit

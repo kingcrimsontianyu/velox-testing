@@ -2,19 +2,8 @@
 # TPC-H Benchmark Module for Velox
 # This file contains TPC-H specific benchmark utilities used by benchmark_velox.sh
 
-# Copyright (c) 2025, NVIDIA CORPORATION.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026, NVIDIA CORPORATION.
+# SPDX-License-Identifier: Apache-2.0
 
 # TPC-H specific constants
 TPCH_REQUIRED_TABLES=("customer" "lineitem" "nation" "orders" "part" "partsupp" "region" "supplier")
@@ -244,8 +233,6 @@ run_tpch_single_benchmark() {
         --run_query_verbose='"${query_number_padded}"' \
         --num_repeats='"${num_repeats}"' \
         --num_drivers='"${num_drivers}"' \
-        --preferred_output_batch_rows='"${output_batch_rows}"' \
-        --max_output_batch_rows='"${output_batch_rows}"' \
         '"${CUDF_FLAGS}"' 2>&1 | \
         tee \"\$BASE_FILENAME\"
       chown \"${USER_ID}:${GROUP_ID}\" \"\$BASE_FILENAME\"

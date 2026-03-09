@@ -1,11 +1,11 @@
 ARG TARGETARCH
 
 # Install latest ninja
-FROM --platform=$TARGETPLATFORM alpine:latest AS ninja-amd64
+FROM alpine:latest AS ninja-amd64
 RUN apk add --no-cache unzip
 ADD https://github.com/ninja-build/ninja/releases/latest/download/ninja-linux.zip /tmp
 
-FROM --platform=$TARGETPLATFORM alpine:latest AS ninja-arm64
+FROM alpine:latest AS ninja-arm64
 RUN apk add --no-cache unzip
 ADD https://github.com/ninja-build/ninja/releases/latest/download/ninja-linux-aarch64.zip /tmp
 RUN mv /tmp/ninja-linux-aarch64.zip /tmp/ninja-linux.zip
@@ -16,15 +16,14 @@ RUN unzip -d /usr/bin -o /tmp/ninja-linux.zip
 FROM ghcr.io/facebookincubator/velox-dev:adapters
 ARG TARGETARCH
 
-
 # Do this separate so changing unrelated build args doesn't invalidate nsys installation layer
 ARG VELOX_ENABLE_BENCHMARKS=ON
 
 # Install NVIDIA Nsight Systems (nsys) for profiling - only if benchmarks are enabled
-RUN \ 
+RUN \
 <<EOF
-if [ "$VELOX_ENABLE_BENCHMARKS" = "ON" ]; then 
-      set -euxo pipefail 
+if [ "$VELOX_ENABLE_BENCHMARKS" = "ON" ]; then
+      set -euxo pipefail
       # Detect architecture and set appropriate repo
       ARCH=$(uname -m)
       if [ "$ARCH" = "aarch64" ]; then
@@ -51,7 +50,7 @@ EOF
 ARG NUM_THREADS=8
 ARG MAX_HIGH_MEM_JOBS=4
 ARG MAX_LINK_JOBS=4
-ARG CUDA_VERSION=12.8
+ARG CUDA_VERSION=12.9
 ARG CUDA_ARCHITECTURES=70
 ARG BUILD_WITH_VELOX_ENABLE_CUDF=ON
 ARG BUILD_WITH_VELOX_ENABLE_WAVE=OFF
@@ -79,7 +78,7 @@ ENV VELOX_DEPENDENCY_SOURCE=SYSTEM \
     MAKEFLAGS="NUM_THREADS=${NUM_THREADS}" \
     CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES} \
     CUDA_COMPILER=/usr/local/cuda-${CUDA_VERSION}/bin/nvcc \
-    CUDA_FLAGS="-ccbin /opt/rh/gcc-toolset-12/root/usr/bin" \
+    CUDA_FLAGS="-ccbin /opt/rh/gcc-toolset-14/root/usr/bin" \
     BUILD_TYPE=${BUILD_TYPE} \
     EXTRA_CMAKE_FLAGS="-DVELOX_ENABLE_BENCHMARKS=${VELOX_ENABLE_BENCHMARKS} \
                       -DVELOX_ENABLE_EXAMPLES=ON \
@@ -142,14 +141,28 @@ RUN \
     --mount=type=secret,id=github_token,env=SCCACHE_DIST_AUTH_TOKEN \
     --mount=type=secret,id=aws_credentials,target=/root/.aws/credentials \
     # Mount sccache setup script
-    --mount=type=bind,source=velox-testing/velox/docker/sccache/sccache_setup.sh,target=/sccache_setup.sh,ro \
+    --mount=type=bind,source=velox-testing/scripts/sccache/sccache_setup.sh,target=/sccache_setup.sh,ro \
 <<EOF
 set -euxo pipefail;
 
+# Enable gcc-toolset-14 and set compilers
+# Reference: https://github.com/facebookincubator/velox/pull/15427
+source /opt/rh/gcc-toolset-14/enable;
+export CC=gcc CXX=g++;
+# Verify gcc version
+echo "Using GCC version:";
+gcc --version | head -1;
+
 # Install and configure sccache if enabled
 if [ "$ENABLE_SCCACHE" = "ON" ]; then
+  # Add sccache distributed compilation control (disabled by default)
+  if [ -n "$SCCACHE_NO_DIST_COMPILE" ]; then
+    export SCCACHE_NO_DIST_COMPILE=1;
+  fi
   # Run sccache setup script
   bash /sccache_setup.sh;
+  # Zero sccache stats
+  sccache --zero-stats;
   # Add sccache CMake flags
   EXTRA_CMAKE_FLAGS="${EXTRA_CMAKE_FLAGS} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_CUDA_COMPILER_LAUNCHER=sccache";
   export NVCC_APPEND_FLAGS="${NVCC_APPEND_FLAGS:+$NVCC_APPEND_FLAGS }-t=100";
@@ -162,8 +175,7 @@ if test -n "${MAX_LINK_JOBS:-}"; then
   MAKEFLAGS="${MAKEFLAGS} MAX_LINK_JOBS=${MAX_LINK_JOBS}";
 fi
 
-# Disable sccache-dist for CMake configuration's test compiles
-SCCACHE_NO_DIST_COMPILE=1 \
+# Build Velox
 make cmake BUILD_DIR="${BUILD_TYPE}" BUILD_TYPE="${BUILD_TYPE}" EXTRA_CMAKE_FLAGS="${EXTRA_CMAKE_FLAGS}" BUILD_BASE_DIR="${BUILD_BASE_DIR}";
 
 # Run the build with timings
