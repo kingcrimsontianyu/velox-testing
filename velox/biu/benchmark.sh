@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-scale_factor=0.01
+scale_factor=10
 data_dir=/mnt/nvme_ubuntu_test/velox-tpch-data/sf-${scale_factor}
 output_dir=/mnt/nvme_ubuntu_test/velox-tpch-result/tmp
 
