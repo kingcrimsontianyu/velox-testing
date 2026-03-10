@@ -9,9 +9,12 @@ set -xeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="${SCRIPT_DIR}/../docker/docker-compose.adapters.build.yml"
 CONTAINER_NAME="velox-adapters-build"
+DATA_DIR="/mnt/nvme_ubuntu_test/velox-tpch-data"
 
 docker compose -f "$COMPOSE_FILE" run --rm \
   --cap-add=SYS_ADMIN \
+  -v "$DATA_DIR":"/mnt/nvme/velox-tpch-data:ro" \
+  -v "$(pwd)":"/workspace/biu" \
   "$CONTAINER_NAME" \
   bash -c '
 RCFILE=/tmp/.velox-bashrc
