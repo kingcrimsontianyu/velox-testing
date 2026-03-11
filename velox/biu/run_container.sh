@@ -15,6 +15,7 @@ docker compose -f "$COMPOSE_FILE" run --rm \
   --cap-add=SYS_ADMIN \
   -v "$DATA_DIR":"/mnt/nvme/velox-tpch-data:ro" \
   -v "$(pwd)":"/workspace/biu" \
+  -v "$(pwd)/../..":"/workspace/home" \
   "$CONTAINER_NAME" \
   bash -c '
 RCFILE=/tmp/.velox-bashrc
