@@ -16,7 +16,7 @@ export PRESTO_DATA_DIR=/raid/knataraj/datasets
 # # TPC-H SQL
 # ./run_benchmark.sh -b tpch -s sf10k_v2_float -f 10000 --queries-file /raid/knataraj/velox-testing/presto/testing/common/queries/tpch/queries.json
 # # Devevaret's SQL (Q17, Q21 optimized)
-# ./run_benchmark.sh -b tpch -s sf1k_v2_float -f 1000
+./run_benchmark.sh -b tpch -s sf1k_v2_float -f 1000
 
-./run_benchmark.sh -b tpch -s sf1k_v2_float -f 1000 -q 1
+# ./run_benchmark.sh -b tpch -s sf1k_v2_float -f 1000 -q 1
 # ./run_benchmark.sh -b tpch -s sf3k_v2_float -f 3000 -q 1
