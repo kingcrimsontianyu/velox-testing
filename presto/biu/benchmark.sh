@@ -19,4 +19,4 @@ export PRESTO_DATA_DIR=/raid/knataraj/datasets
 # ./run_benchmark.sh -b tpch -s sf1k_v2_float -f 1000
 
 ./run_benchmark.sh -b tpch -s sf1k_v2_float -f 1000 -q 1
-
+# ./run_benchmark.sh -b tpch -s sf3k_v2_float -f 3000 -q 1
