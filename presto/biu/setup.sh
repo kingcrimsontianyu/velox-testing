@@ -8,6 +8,7 @@ set -xeuo pipefail
 
 cd ../scripts
 export PRESTO_DATA_DIR=/raid/knataraj/datasets
-./start_native_gpu_presto.sh #--no-cache --build worker
+# ./start_native_gpu_presto.sh #--no-cache --build worker
+./start_native_gpu_presto.sh -w 4 -g 0,1,2,3
 
 # ./setup_benchmark_data_and_tables.sh -b tpch -s sf1k_v2_float -d sf1k_v2_float -f 1000 -c
