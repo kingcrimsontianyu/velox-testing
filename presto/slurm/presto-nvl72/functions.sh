@@ -276,7 +276,7 @@ ${LOGS}:${vt_nsys_report_dir},\
 /usr/lib/aarch64-linux-gnu/libnvidia-ml.so.580.105.08:/usr/local/lib/libnvidia-ml.so.1\
 ${gds_mounts:+,${gds_mounts}} \
 -- /bin/bash -c "
-export LD_LIBRARY_PATH=\"${CUDF_LIB}\${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}\"
+export LD_LIBRARY_PATH='${CUDF_LIB}':/usr/local/lib:\${LD_LIBRARY_PATH:-}
 export KVIKIO_TASK_SIZE=\$((16*1024*1024))
 export KVIKIO_NTHREADS=16
 if [[ '${ENABLE_GDS}' == '1' ]]; then

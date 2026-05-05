@@ -73,7 +73,7 @@ function init_python_virtual_env() {
     # Pin ncurses<6.5 on ARM (aarch64): ncurses-6.5 has a symlink conflict bug
     # that causes conda create to fail with EEXIST on terminfo files.
     # python=3.12 leads to "ModuleNotFoundError: No module named '_posixsubprocess'".
-    conda create -q -y --prefix "$venv_dir" python=3.11 "ncurses<6.5" > /dev/null
+    conda create -q -y --prefix "$venv_dir" python=3.11 pip "ncurses<6.5" > /dev/null
   fi
 
   activate_python_virtual_env $venv_dir

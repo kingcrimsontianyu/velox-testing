@@ -39,16 +39,22 @@ EXTRA_ARGS=()
 NUM_GPUS_PER_NODE="4"
 USE_NUMA="1"
 VARIANT_TYPE="gpu"
+
 # WORKER_IMAGE="presto-native-worker-gpu"
-WORKER_IMAGE="presto-native-worker-gpu-karth-Mar11-with-nsys-2025.5.1"
-# WORKER_IMAGE="velox-testing-images-presto-766546f-velox-1ca955b-gpu-cuda12.9-20260415-arm64-with-nsys"
-COORD_IMAGE="presto-coordinator-karth-Mar11"
-# COORD_IMAGE="velox-testing-images-presto-coordinator-766546f-20260415-arm64-with-jq"
+# WORKER_IMAGE="presto-native-worker-gpu-karth-Mar11-with-nsys-2025.5.1"
 # COORD_IMAGE="presto-coordinator-karth-Mar11"
+
+# WORKER_IMAGE="velox-testing-images-presto-766546f-velox-1ca955b-gpu-cuda12.9-20260415-arm64-with-nsys"
+# COORD_IMAGE="velox-testing-images-presto-coordinator-766546f-20260415-arm64-with-jq"
+
+WORKER_IMAGE="dm-presto-ibm-20260416-partaggs"
+COORD_IMAGE="dm-presto-ibm-coordinator-20260416-base"
+
 #COORD_IMAGE="presto-coordinator-ibm-03-11"
 #WORKER_IMAGE="presto-native-worker-gpu-ibm-03-11"
 #WORKER_IMAGE="velox-testing-images-presto-471cf1a-velox-1a2f63f-gpu-cuda13.1-20260312-arm64"
 #COORD_IMAGE="presto-coordinator"
+
 OUTPUT_PATH=""
 ENABLE_GDS=1
 ENABLE_METRICS=0
