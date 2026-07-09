@@ -10,7 +10,8 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/sshd:1": {},
-    "ghcr.io/rapidsai/devcontainers/features/rapids-build-utils:latest": {}
+    "ghcr.io/rapidsai/devcontainers/features/rapids-build-utils:latest": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "overrideFeatureInstallOrder": [
     "ghcr.io/devcontainers/features/sshd",
@@ -40,7 +41,8 @@
   "runArgs": [
     "--rm",
     "--name", "${localEnv:USER:anon}-velox-dev-cuda13.1",
-    "--ulimit", "nofile=500000"
+    "--ulimit", "nofile=500000",
+    "-v", "${localEnv:HOME}/biubiu/rapids/claude-presto-velox/.claude:/home/coder/.claude"
   ],
   "postCreateCommand": "/bin/bash /home/coder/velox-testing/scripts/devcontainer/post-create",
   "postStartCommand": "/bin/bash /home/coder/velox-testing/scripts/devcontainer/post-start",
