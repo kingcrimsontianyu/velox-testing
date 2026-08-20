@@ -3,15 +3,15 @@ set -uo pipefail
 
 cd ..
 rm -rf benchmark_output presto_logs
-scp -r ubuntu@my-g7e-8:/home/ubuntu/rapids/velox-testing/presto/scripts/benchmark_output .
-scp -r ubuntu@my-g7e-8:/opt/dlami/nvme/presto_logs .
+scp -r ubuntu@my-g7e-12:/home/ubuntu/rapids/velox-testing/presto/scripts/benchmark_output .
+scp -r ubuntu@my-g7e-12:/opt/dlami/nvme/presto_logs .
 
 source ${HOME}/.secret/benchmark.env
 # IMG_HASH=$(docker inspect --format='{{.Id}}' presto-native-worker-gpu:"${USER}")
 cd ../..
 ./scripts/run_py_script.sh -p benchmark_reporting_tools/post_results.py \
 presto/scripts/benchmark_output \
---sku-name g7e.8xlarge \
+--sku-name g7e.12xlarge \
 --storage-configuration-name s3-us-east-2-presto-tpch-scale-1000 \
 --benchmark-name tpch-rs-1000 \
 --cache-state cold \

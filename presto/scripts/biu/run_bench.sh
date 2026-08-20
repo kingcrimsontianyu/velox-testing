@@ -14,7 +14,7 @@ export KVIKIO_REMOTE_IO_MAX_CONCURRENT_REQUESTS=256
 export LIBCUDF_NUM_HOST_WORKERS=8
 export KVIKIO_LOG_LEVEL=INFO
 
-./start_native_gpu_presto.sh --overwrite-config --kvikio-threads 160 --num-drivers 6 \
+./start_native_gpu_presto.sh --overwrite-config --kvikio-threads 240 --num-drivers 6 \
 --logs-dir /opt/dlami/nvme/presto_logs
 # -p --profile-args "-t nvtx,cuda --cuda-memory-usage=true"
 #-b worker
