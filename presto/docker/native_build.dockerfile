@@ -10,11 +10,15 @@ ARG GPU=ON
 ARG BUILD_TYPE=release
 ARG BUILD_BASE_DIR=/presto_native_${BUILD_TYPE}_gpu_${GPU}_build
 ARG NUM_THREADS=12
+# VELOX_ENABLE_S3_DIRECT_RECEIVE defaults ON via presto-native-execution/CMakeLists.txt, which
+# pins KvikIO to kjmph's direct-receive fork. Turned off here to build against the KvikIO
+# branch pinned in velox/CMake/resolve_dependency_modules/cudf.cmake.
 ARG EXTRA_CMAKE_FLAGS="\
     -DPRESTO_ENABLE_TESTING=OFF \
     -DPRESTO_ENABLE_PARQUET=ON \
     -DPRESTO_ENABLE_S3=ON \
     -DPRESTO_ENABLE_CUDF=${GPU} \
+    -DVELOX_ENABLE_S3_DIRECT_RECEIVE=OFF \
     -DVELOX_BUILD_TESTING=OFF \
     -DPRESTO_STATS_REPORTER_TYPE=PROMETHEUS"
 ARG CUDA_ARCHITECTURES="75;80;86;90;100;120"

@@ -18,7 +18,14 @@ function get_worker_container_id() {
 function get_docker_exec_command() {
   local container_id
   container_id=$(get_worker_container_id) || return 1
-  echo "docker exec $container_id"
+  # Forward NSYS_PLUGIN_SEARCH_DIRS so that `nsys start --enable=<plugin>` can find plugins
+  # installed outside of the nsys installation itself, e.g. KvikIO's kvikio_nic plugin
+  # (see biu/install_kvikio_nsys_plugin.sh).
+  local plugin_search_dirs=""
+  if [[ -n ${NSYS_PLUGIN_SEARCH_DIRS:-} ]]; then
+    plugin_search_dirs="-e NSYS_PLUGIN_SEARCH_DIRS"
+  fi
+  echo "docker exec ${plugin_search_dirs} $container_id"
 }
 
 function check_profile_output_directory() {
@@ -36,7 +43,9 @@ function start_profiler() {
 
   local docker_exec_command
   docker_exec_command=$(get_docker_exec_command)
-  $docker_exec_command nsys start --gpu-metrics-devices=all -o /presto_profiles/$(basename $profile_output_file_path).nsys-rep
+  # PROFILE_NSYS_START_ARGS carries extra options for `nsys start`, e.g. to enable an nsys
+  # plugin: PROFILE_NSYS_START_ARGS='--enable=kvikio_nic,-d,eth0,-i,20000'
+  $docker_exec_command nsys start --gpu-metrics-devices=all ${PROFILE_NSYS_START_ARGS:-} -o /presto_profiles/$(basename $profile_output_file_path).nsys-rep
 }
 
 function stop_profiler() {
