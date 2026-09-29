@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026, NVIDIA CORPORATION.
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import os
 import re
 import sys
@@ -8,8 +9,10 @@ import sys
 import pytest
 
 from common.testing.test_utils import (
+    SUPPORTED_REMOTE_SCHEMES,
     get_abs_file_path,
     get_queries,  # noqa: F401
+    is_remote_location,
 )
 
 sys.path.append(get_abs_file_path(__file__, "../../../benchmark_data_tools"))
@@ -18,11 +21,12 @@ sys.path.append(get_abs_file_path(__file__, "../../../benchmark_data_tools"))
 def get_table_external_location(schema_name, table, presto_cursor):
     create_table_text = presto_cursor.execute(f"SHOW CREATE TABLE hive.{schema_name}.{table}").fetchone()
     assert len(create_table_text) == 1
-    # Capture everything between two single quotes
-    location_match = re.search(r"external_location = '([^']*)'", create_table_text[0])
-    location = location_match.group(1) if location_match else ""
+    # Capture the non-empty location between two single quotes
+    location_match = re.search(r"external_location = '([^']+)'", create_table_text[0])
+    assert location_match, f"Table hive.{schema_name}.{table} has no external_location"
+    location = location_match.group(1)
     # For remote path
-    if location and not location.startswith("file:"):
+    if is_remote_location(location):
         return location
     # For local path
     test_match = re.search(r"^file:/var/lib/presto/data/hive/data/integration_test/(.*)$", location)
@@ -32,7 +36,14 @@ def get_table_external_location(schema_name, table, presto_cursor):
         )
     else:
         user_match = re.search(r"^file:/var/lib/presto/data/hive/data/user_data/(.*)$", location)
-        external_dir = f"{os.environ['PRESTO_DATA_DIR']}/{user_match.group(1)}" if user_match else ""
+        if not user_match:
+            raise Exception(
+                f"Unsupported external location '{location}' referenced by table hive.{schema_name}.{table}. "
+                f"Only {', '.join(SUPPORTED_REMOTE_SCHEMES)} locations and file: locations under "
+                "/var/lib/presto/data/hive/data/integration_test or /var/lib/presto/data/hive/data/user_data "
+                "are supported."
+            )
+        external_dir = f"{os.environ['PRESTO_DATA_DIR']}/{user_match.group(1)}"
     if not os.path.isdir(external_dir):
         raise Exception(
             f"External location '{external_dir}' referenced by table hive.{schema_name}.{table} does not exist"
@@ -41,10 +52,16 @@ def get_table_external_location(schema_name, table, presto_cursor):
 
 
 def read_scale_factor(metadata_uri):
-    """Read the scale factor from a metadata.json at metadata_uri (local path or s3://)."""
-    import duckdb_utils
+    """Read the scale factor from a metadata.json at metadata_uri (local or remote path)."""
+    if is_remote_location(metadata_uri):
+        import duckdb_utils
 
-    return duckdb_utils.read_scale_factor(metadata_uri)
+        metadata = json.loads(duckdb_utils.read_text(metadata_uri))
+    else:
+        with open(metadata_uri) as file:
+            metadata = json.load(file)
+    # The scale factor is either a top-level field or nested under 'options'.
+    return metadata.get("scale_factor") or metadata.get("options", {}).get("scale_factor")
 
 
 def get_scale_factor(request, presto_cursor):

@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026, NVIDIA CORPORATION.
 # SPDX-License-Identifier: Apache-2.0
 
-import json
 import os
 import re
 
@@ -10,11 +9,11 @@ import duckdb
 _s3_configured = False
 
 
-def ensure_remote_access(path) -> None:
-    """Configure DuckDB to read from a remote object store if ``path`` needs it.
+def configure_data_access(path) -> None:
+    """Configure DuckDB to read data at ``path``.
 
-    The region must be provided via AWS_DEFAULT_REGION (or AWS_REGION). Do nothing for local
-    paths.
+    Local paths need no setup. For s3:// paths, the region must be provided via
+    AWS_DEFAULT_REGION (or AWS_REGION).
     """
     global _s3_configured
     if _s3_configured or not str(path).startswith("s3://"):
@@ -33,22 +32,10 @@ def ensure_remote_access(path) -> None:
     _s3_configured = True
 
 
-def _extract_scale_factor(metadata: dict):
-    """Return the scale factor from parsed metadata, whether it is a top-level field or
-    nested under 'options'."""
-    return metadata.get("scale_factor") or metadata.get("options", {}).get("scale_factor")
-
-
-def read_scale_factor(metadata_uri: str):
-    """Read the scale_factor field from a metadata.json at ``metadata_uri``."""
-    # For local data
-    if not str(metadata_uri).startswith("s3://"):
-        with open(metadata_uri) as file:
-            return _extract_scale_factor(json.load(file))
-    # For remote data
-    ensure_remote_access(metadata_uri)
-    raw = duckdb.sql(f"SELECT content FROM read_text('{metadata_uri}')").fetchone()[0]
-    return _extract_scale_factor(json.loads(raw))
+def read_text(uri: str) -> str:
+    """Return the contents of the text file at ``uri`` (local path or s3://)."""
+    configure_data_access(uri)
+    return duckdb.sql(f"SELECT content FROM read_text('{uri}')").fetchone()[0]
 
 
 def quote_ident(name: str) -> str:
@@ -75,7 +62,7 @@ def drop_benchmark_tables():
 
 
 def create_table(table_name, data_path):
-    ensure_remote_access(data_path)
+    configure_data_access(data_path)
     duckdb.sql(f"DROP TABLE IF EXISTS {quote_ident(table_name)}")
     duckdb.sql(f"CREATE TABLE {quote_ident(table_name)} AS SELECT * FROM '{data_path}/*.parquet';")
 
@@ -83,7 +70,7 @@ def create_table(table_name, data_path):
 # Generates a sample table with a small limit.
 # This is mainly used to extract the schema from the parquet files.
 def create_not_null_table_from_sample(table_name, data_path):
-    ensure_remote_access(data_path)
+    configure_data_access(data_path)
     duckdb.sql(f"DROP TABLE IF EXISTS {quote_ident(table_name)}")
     duckdb.sql(f"CREATE TABLE {quote_ident(table_name)} AS SELECT * FROM '{data_path}/*.parquet' LIMIT 10;")
     ret = duckdb.sql(f"DESCRIBE TABLE {quote_ident(table_name)}").fetchall()
@@ -92,7 +79,7 @@ def create_not_null_table_from_sample(table_name, data_path):
 
 
 def create_table_from_sample(table_name, data_path):
-    ensure_remote_access(data_path)
+    configure_data_access(data_path)
     duckdb.sql(f"DROP TABLE IF EXISTS {quote_ident(table_name)}")
     duckdb.sql(f"CREATE TABLE {quote_ident(table_name)} AS SELECT * FROM '{data_path}/*.parquet' LIMIT 10;")
 
