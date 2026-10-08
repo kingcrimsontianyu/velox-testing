@@ -94,6 +94,8 @@ def main() -> int:
         single_container=parsed_args.single_container,
         kvikio_threads=parsed_args.kvikio_threads,
         sccache=parsed_args.sccache,
+        # WXD-like workers: host networking (per-NIC S3 binding) and EFA devices.
+        host_network=os.environ.get("PRESTO_GPU_HOST_NETWORK", "false").lower() == "true",
     )
 
     os.makedirs(os.path.dirname(parsed_args.output_path), exist_ok=True)
