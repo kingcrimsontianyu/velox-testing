@@ -8,17 +8,17 @@
 #
 # Common runs (images presto-coordinator:<tag> and presto-native-worker-gpu:<tag> must exist):
 #   Async data cache ON, cleared before each query (iteration 1 cold, the rest hot):
-#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --cache-mode cold-once
+#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --async-data-cache on --cache-mode cold-once
 #   Async data cache ON, cleared once before the first query:
-#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --cache-mode lukewarm
+#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --async-data-cache on --cache-mode lukewarm
 #   Async data cache OFF:
-#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --cache-mode off
+#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --async-data-cache off
 #   SF3K instead of SF1K:
-#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --cache-mode off -s tpch_sf3k_v2_float_s3
+#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --async-data-cache off -s tpch_sf3k_v2_float_s3
 #   A few queries with the HTTP exchange:
 #     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> -q 1,6 --exchange http
 #   Start the cluster for ad-hoc queries, then stop it:
-#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --cache-mode lukewarm --start-only
+#     ./run_tpch_g7e_48xlarge.sh --image-tag <tag> --async-data-cache on --start-only
 #     ../stop_presto.sh
 # On a shared host, also pass --compose-project <name> so other people's clusters are not
 # stopped, and use the same COMPOSE_PROJECT_NAME and PRESTO_IMAGE_TAG for stop_presto.sh.
@@ -49,8 +49,10 @@ OPTIONS:
                             By default, all benchmark queries are run.
     -i, --iterations        Number of query run iterations. By default, 3 iterations are run.
     -t, --tag               Tag associated with the benchmark run. By default, a tag is built from the options.
-    --cache-mode            "off" runs with the async data cache disabled. "lukewarm", "cold-once", "cold" and
-                            "hot" run with it enabled and are passed on to run_benchmark.sh. By default, "off".
+    --async-data-cache      Enable ("on") or disable ("off") the Velox async data cache on the workers.
+                            By default, "off".
+    --cache-mode            When to clear caches between queries, passed on to run_benchmark.sh: "off", "lukewarm",
+                            "cold-once", "cold" or "hot". By default, "off".
     --image-tag             Tag of the presto-coordinator and presto-native-worker-gpu images to run.
                             By default, \$USER (as in start_native_gpu_presto.sh).
     --compose-project       Docker Compose project name. By default, Docker Compose chooses it.
@@ -62,8 +64,8 @@ OPTIONS:
     --start-only            Start the cluster and exit. Stop it with stop_presto.sh.
 
 EXAMPLES:
-    $0 --cache-mode cold-once
-    $0 --cache-mode lukewarm --image-tag ucx-extra
+    $0 --async-data-cache on --cache-mode cold-once
+    $0 --async-data-cache on --cache-mode lukewarm --image-tag wxd-upstream
     $0 -s tpch_sf3k_v2_float_s3
     $0 -q "1,6" --exchange http
 
@@ -72,6 +74,7 @@ EOF
 
 SCHEMA_NAME=tpch_sf1k_v2_float_s3
 ITERATIONS=3
+ASYNC_DATA_CACHE=off
 CACHE_MODE=off
 IMAGE_TAG=${USER:-latest}
 EXCHANGE=ucx
@@ -87,8 +90,8 @@ parse_args() {
         print_help
         exit 0
         ;;
-      -s|--schema-name|-q|--queries|-i|--iterations|-t|--tag|--cache-mode|--image-tag|--compose-project|\
-      --exchange|--dispatch)
+      -s|--schema-name|-q|--queries|-i|--iterations|-t|--tag|--async-data-cache|--cache-mode|--image-tag|\
+      --compose-project|--exchange|--dispatch)
         if [[ -z $2 ]]; then
           echo "Error: $1 requires a value"
           exit 1
@@ -98,6 +101,7 @@ parse_args() {
           -q|--queries) QUERIES=$2 ;;
           -i|--iterations) ITERATIONS=$2 ;;
           -t|--tag) TAG=$2 ;;
+          --async-data-cache) ASYNC_DATA_CACHE=$2 ;;
           --cache-mode) CACHE_MODE=$2 ;;
           --image-tag) IMAGE_TAG=$2 ;;
           --compose-project) COMPOSE_PROJECT=$2 ;;
@@ -129,14 +133,22 @@ parse_args() {
 
 parse_args "$@"
 
-case $CACHE_MODE in
-  off) ASYNC_DATA_CACHE=false ;;
-  lukewarm|cold-once|cold|hot) ASYNC_DATA_CACHE=true ;;
+case $ASYNC_DATA_CACHE in
+  on) ASYNC_DATA_CACHE_ENABLED=true ;;
+  off) ASYNC_DATA_CACHE_ENABLED=false ;;
   *)
-    echo "Error: --cache-mode must be off, lukewarm, cold-once, cold or hot"
+    echo "Error: --async-data-cache must be on or off"
     exit 1
     ;;
 esac
+if [[ ! $CACHE_MODE =~ ^(off|lukewarm|cold-once|cold|hot)$ ]]; then
+  echo "Error: --cache-mode must be off, lukewarm, cold-once, cold or hot"
+  exit 1
+fi
+if [[ $ASYNC_DATA_CACHE == off && $CACHE_MODE =~ ^(lukewarm|cold-once|cold)$ ]]; then
+  echo "Warning: --cache-mode ${CACHE_MODE} with --async-data-cache off: there is no async data cache to clear," \
+    "so only the Hive file-handle cache is cleared."
+fi
 if [[ ! $EXCHANGE =~ ^(ucx|http)$ ]]; then
   echo "Error: --exchange must be ucx or http"
   exit 1
@@ -226,7 +238,7 @@ for i in 0 1 2 3 4 5 6 7; do
   W=$G/etc_worker_$i
   setprop $W/node.properties node.internal-address "$HOST_IP"
   setprop $W/config_native.properties discovery.uri http://127.0.0.1:8080
-  setprop $W/config_native.properties async-data-cache-enabled $ASYNC_DATA_CACHE
+  setprop $W/config_native.properties async-data-cache-enabled $ASYNC_DATA_CACHE_ENABLED
   setprop $W/config_native.properties system-memory-gb 219
   setprop $W/config_native.properties query-memory-gb 153
   setprop $W/config_native.properties system-mem-limit-gb 229
@@ -277,7 +289,7 @@ fi
 
 # 6. Run the benchmark.
 if [[ -z $TAG ]]; then
-  TAG="${SCHEMA_NAME}_g7e_48xlarge_${IMAGE_TAG}_${EXCHANGE}_${CACHE_MODE}"
+  TAG="${SCHEMA_NAME}_g7e_48xlarge_${IMAGE_TAG}_${EXCHANGE}_adc_${ASYNC_DATA_CACHE}_${CACHE_MODE}"
   [[ $DISPATCH != SHARED_QUEUE ]] && TAG+="_${DISPATCH,,}"
   [[ $NONTEMPORAL_COPY == false ]] && TAG+=_no_nontemporal_copy
   [[ $NIC_BIND == false ]] && TAG+=_no_nic_bind
